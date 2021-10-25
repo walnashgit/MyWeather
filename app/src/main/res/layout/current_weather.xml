@@ -1,0 +1,251 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <data>
+        <variable
+            name="currentWeather"
+            type="test.sample.myweather.data.current.CurrentWeather" />
+    </data>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <TextView
+            android:id="@+id/location"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="16dp"
+            android:text="@{currentWeather.name}"
+            android:textSize="15sp"
+            app:layout_constraintBottom_toTopOf="@id/temperature"
+            app:layout_constraintEnd_toStartOf="@+id/date"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintHorizontal_chainStyle="spread_inside"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="Bangalore" />
+
+        <TextView
+            android:id="@+id/date"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="16dp"
+            android:text="@{currentWeather.currentDateTime}"
+            android:textSize="15sp"
+            app:layout_constraintBottom_toBottomOf="@id/location"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toEndOf="@+id/location"
+            tools:text="23 Oct, 3:35PM" />
+
+        <TextView
+            android:id="@+id/temperature"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="16dp"
+            android:text="@{Double.toString(currentWeather.main.temp)}"
+            android:textSize="50sp"
+            app:layout_constraintEnd_toStartOf="@+id/temperature_unit"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintHorizontal_chainStyle="packed"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/location"
+            tools:text="25" />
+
+        <TextView
+            android:id="@+id/temperature_unit"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="2dp"
+            android:layout_marginTop="16dp"
+            android:text="@string/degree_celsius"
+            android:textSize="25sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toEndOf="@+id/temperature"
+            app:layout_constraintTop_toTopOf="@id/temperature" />
+
+        <TextView
+            android:id="@+id/feels_like_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/feels_like"
+            android:textSize="15sp"
+            app:layout_constraintEnd_toStartOf="@+id/feels_like"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintHorizontal_chainStyle="packed"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/temperature" />
+
+        <TextView
+            android:id="@+id/feels_like"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingStart="2dp"
+            android:paddingEnd="2dp"
+            app:setTextWithUnit="@{Double.toString(currentWeather.main.feelsLike)}"
+            app:unit="@{@string/degree}"
+            android:textSize="15sp"
+            app:layout_constraintBottom_toBottomOf="@id/feels_like_label"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toEndOf="@+id/feels_like_label"
+            tools:text="22" />
+
+        <TextView
+            android:id="@+id/status"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:text="@{currentWeather.weather[0].description}"
+            android:textSize="25sp"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/feels_like_label"
+            tools:text="Overcast clouds" />
+
+        <TextView
+            android:id="@+id/max_temp_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="32dp"
+            android:layout_marginTop="32dp"
+            android:text="@string/max_temp"
+            android:textSize="15sp"
+            app:layout_constraintEnd_toStartOf="@+id/max_temp"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintHorizontal_chainStyle="packed"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/status" />
+
+        <TextView
+            android:id="@+id/max_temp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="32dp"
+            android:layout_marginStart="32dp"
+            app:setTextWithUnit="@{Double.toString(currentWeather.main.tempMax)}"
+            app:unit="@{@string/degree}"
+            android:textSize="15sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toEndOf="@+id/max_temp_label"
+            app:layout_constraintTop_toTopOf="@id/max_temp_label"
+            tools:text="22" />
+
+        <TextView
+            android:id="@+id/min_temp_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/min_temp"
+            android:textSize="15sp"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintStart_toStartOf="@id/max_temp_label"
+            app:layout_constraintTop_toBottomOf="@id/max_temp_label" />
+
+        <TextView
+            android:id="@+id/min_temp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:setTextWithUnit="@{Double.toString(currentWeather.main.tempMin)}"
+            app:unit="@{@string/degree}"
+            android:textSize="15sp"
+            app:layout_constraintLeft_toRightOf="@id/min_temp_label"
+            app:layout_constraintStart_toStartOf="@id/max_temp"
+            app:layout_constraintTop_toTopOf="@id/min_temp_label"
+            tools:text="21" />
+
+        <TextView
+            android:id="@+id/humidity_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/humidity"
+            android:textSize="15sp"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintStart_toStartOf="@id/max_temp_label"
+            app:layout_constraintTop_toBottomOf="@id/min_temp_label" />
+
+        <TextView
+            android:id="@+id/humidity"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:setTextWithUnit="@{Integer.toString(currentWeather.main.humidity)}"
+            app:unit="@{@string/percentage}"
+            android:textSize="15sp"
+            app:layout_constraintLeft_toRightOf="@id/humidity_label"
+            app:layout_constraintStart_toStartOf="@id/max_temp"
+            app:layout_constraintTop_toTopOf="@id/humidity_label"
+            tools:text="92" />
+
+        <TextView
+            android:id="@+id/visibility_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/visibility"
+            android:textSize="15sp"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintStart_toStartOf="@id/max_temp_label"
+            app:layout_constraintTop_toBottomOf="@id/humidity_label" />
+
+        <TextView
+            android:id="@+id/visibility"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:setTextWithUnit="@{Integer.toString(currentWeather.visibility/1000)}"
+            app:unit="@{@string/kilometer}"
+            android:textSize="15sp"
+            app:layout_constraintLeft_toRightOf="@id/visibility_label"
+            app:layout_constraintStart_toStartOf="@id/max_temp"
+            app:layout_constraintTop_toTopOf="@id/visibility_label"
+            tools:text="1234" />
+
+        <TextView
+            android:id="@+id/sunrise_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/sun_rise"
+            android:textSize="15sp"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintStart_toStartOf="@id/max_temp_label"
+            app:layout_constraintTop_toBottomOf="@id/visibility_label" />
+
+        <TextView
+            android:id="@+id/sunrise"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@{currentWeather.sunriseTime}"
+            android:textSize="15sp"
+            app:layout_constraintLeft_toRightOf="@id/sunrise_label"
+            app:layout_constraintStart_toStartOf="@id/max_temp"
+            app:layout_constraintTop_toTopOf="@id/sunrise_label"
+            tools:text="05:01 AM" />
+
+        <TextView
+            android:id="@+id/sunset_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/sun_set"
+            android:textSize="15sp"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintStart_toStartOf="@id/max_temp_label"
+            app:layout_constraintTop_toBottomOf="@id/sunrise_label" />
+
+        <TextView
+            android:id="@+id/sunset"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@{currentWeather.sunsetTime}"
+            android:textSize="15sp"
+            app:layout_constraintLeft_toRightOf="@id/sunset_label"
+            app:layout_constraintStart_toStartOf="@id/max_temp"
+            app:layout_constraintTop_toTopOf="@id/sunset_label"
+            tools:text="06:51 PM" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>

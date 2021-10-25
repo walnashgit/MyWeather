@@ -1,0 +1,46 @@
+{
+  "coord": {
+    "lon": 77.7288,
+    "lat": 12.9937
+  },
+  "weather": [
+    {
+      "id": 804,
+      "main": "Clouds",
+      "description": "overcast clouds",
+      "icon": "04n"
+    }
+  ],
+  "base": "stations",
+  "main": {
+    "temp": 21.1,
+    "feels_like": 21.67,
+    "temp_min": 21.1,
+    "temp_max": 21.1,
+    "pressure": 1014,
+    "humidity": 92,
+    "sea_level": 1014,
+    "grnd_level": 915
+  },
+  "visibility": 10000,
+  "wind": {
+    "speed": 2.44,
+    "deg": 116,
+    "gust": 3.9
+  },
+  "clouds": {
+    "all": 99
+  },
+  "dt": 1634932503,
+  "sys": {
+    "type": 1,
+    "id": 9208,
+    "country": "IN",
+    "sunrise": 1634949628,
+    "sunset": 1634991966
+  },
+  "timezone": 19800,
+  "id": 1269936,
+  "name": "Hoskote",
+  "cod": 200
+}

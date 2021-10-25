@@ -1,0 +1,22 @@
+<resources>
+    <string name="app_name">MyWeather</string>
+    <string name="permission_rationale">Location permission needed to get weather data for your location.</string>
+    <string name="ok">OK</string>
+    <string name="settings">Settings</string>
+    <string name="enable_gps">Enable GPS</string>
+    <string name="required_for_this_app">GPS is required for this app\'s basic functionality. Please enable GPS and press refresh.</string>
+    <string name="enable_now">Enable now</string>
+    <string name="refresh">Refresh</string>
+    <string name="feels_like">Feels like</string>
+    <string name="max_temp">Max Temp</string>
+    <string name="min_temp">Min Temp</string>
+    <string name="humidity">Humidity</string>
+    <string name="visibility">Visibility</string>
+    <string name="degree_celsius">℃</string>
+    <string name="sun_rise">Sun Rise</string>
+    <string name="sun_set">Sun Set</string>
+    <string name="degree">°</string>
+    <string name="percentage">%</string>
+    <string name="kilometer">KM</string>
+
+</resources>
