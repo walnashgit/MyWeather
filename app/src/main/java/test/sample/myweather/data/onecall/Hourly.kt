@@ -1,7 +1,10 @@
 package test.sample.myweather.data.onecall
 
 
+import android.util.Log
 import com.google.gson.annotations.SerializedName
+import java.text.SimpleDateFormat
+import java.util.*
 
 data class Hourly(
     @SerializedName("clouds")
@@ -31,5 +34,8 @@ data class Hourly(
     @SerializedName("wind_gust")
     val windGust: Double,
     @SerializedName("wind_speed")
-    val windSpeed: Double
+    val windSpeed: Double,
+
+    // This value is calculated and not serialized from response.
+    var time: String
 )

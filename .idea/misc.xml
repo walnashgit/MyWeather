@@ -4,6 +4,9 @@
     <option name="filePathToZoomLevelMap">
       <map>
         <entry key="app/src/main/res/layout/current_weather.xml" value="0.1" />
+        <entry key="app/src/main/res/layout/daily_forecast_item.xml" value="0.21510416666666668" />
+        <entry key="app/src/main/res/layout/forecast_item.xml" value="0.21510416666666668" />
+        <entry key="app/src/main/res/layout/hourly_forecast_item.xml" value="0.33" />
         <entry key="app/src/main/res/layout/main_activity.xml" value="0.1" />
         <entry key="app/src/main/res/layout/main_fragment.xml" value="0.2" />
       </map>

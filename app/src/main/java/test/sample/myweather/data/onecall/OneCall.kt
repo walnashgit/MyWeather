@@ -2,6 +2,8 @@ package test.sample.myweather.data.onecall
 
 
 import com.google.gson.annotations.SerializedName
+import java.text.SimpleDateFormat
+import java.util.*
 
 data class OneCall(
     @SerializedName("alerts")
@@ -21,5 +23,17 @@ data class OneCall(
     @SerializedName("timezone")
     val timezone: String,
     @SerializedName("timezone_offset")
-    val timezoneOffset: Int
-)
+    val timezoneOffset: Long
+) {
+    fun getHourlyData(): List<Hourly> {
+        return hourly.onEach {
+            it.time = getTime(it.dt)
+        }
+    }
+
+    private fun getTime(dt: Int): String {
+        val dateFormat = SimpleDateFormat("h a", Locale.getDefault())
+        val localOffset = Calendar.getInstance().get(Calendar.ZONE_OFFSET)
+        return dateFormat.format((dt + timezoneOffset)*1000 - localOffset).uppercase(Locale.getDefault())
+    }
+}

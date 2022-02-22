@@ -9,17 +9,20 @@ import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.activity.viewModels
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.launch
 import test.sample.myweather.data.current.CurrentWeather
 import test.sample.myweather.data.onecall.OneCall
 import test.sample.myweather.databinding.MainActivityBinding
 import test.sample.myweather.location.LocationUtil
 import test.sample.myweather.network.ApiResult
+import test.sample.myweather.ui.hourly.HourlyDataAdapter
 import test.sample.myweather.ui.main.AppEvents
 import test.sample.myweather.ui.main.AppState
 import test.sample.myweather.ui.main.MainViewModel
@@ -36,7 +39,9 @@ class MainActivity : AppCompatActivity() {
     @Inject
     lateinit var locationUtil: LocationUtil
 
-    lateinit var binding: MainActivityBinding
+    private lateinit var binding: MainActivityBinding
+    private lateinit var hourlyDataAdapter: HourlyDataAdapter
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -46,6 +51,8 @@ class MainActivity : AppCompatActivity() {
         binding.refresh.setOnClickListener {
             viewModel.setEvent(AppEvents.RefreshWeatherInfo)
         }
+        hourlyDataAdapter = HourlyDataAdapter()
+        binding.hourlyRecyclerView.adapter = hourlyDataAdapter
         observeAppState()
     }
 
@@ -53,39 +60,62 @@ class MainActivity : AppCompatActivity() {
      * Start observing ui states.
      */
     private fun observeAppState() {
-        lifecycleScope.launchWhenStarted {
-            viewModel.uiState.collect {
-                when (it) {
-                    AppState.CheckingLocationPermission -> {
-                        Log.d(TAG, "Checking location Permission.")
-                        binding.loading.visibility = View.VISIBLE
-                        locationUtil.getCurrentLocation { locationResultEvent ->
-                            viewModel.setEvent(locationResultEvent)
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.uiState.collect {
+                    when (it) {
+                        AppState.CheckingLocationPermission -> {
+                            Log.d(TAG, "Checking location Permission.")
+                            binding.loading.visibility = View.VISIBLE
+                            locationUtil.getCurrentLocation { locationResultEvent ->
+                                viewModel.setEvent(locationResultEvent)
+                            }
                         }
-                    }
-                    AppState.LocationPermissionGranted -> {
-                        Log.d(TAG, "location Permission granted, get current location.")
-                        locationUtil.getCurrentLocation { locationResultEvent ->
-                            viewModel.setEvent(locationResultEvent)
+                        AppState.LocationPermissionGranted -> {
+                            Log.d(TAG, "location Permission granted, get current location.")
+                            locationUtil.getCurrentLocation { locationResultEvent ->
+                                viewModel.setEvent(locationResultEvent)
+                            }
                         }
-                    }
-                    AppState.LocationPermissionDenied -> {
-                        Log.d(TAG, "Show snack bar requesting location permission.")
-                        binding.loading.visibility = View.GONE
-                        showSnackBarToRequestLocationPermission()
-                    }
-                    AppState.FetchingWeatherData -> {
-                        binding.loading.visibility = View.VISIBLE
-                        Log.d(TAG, "Fetching weather data.")
-                    }
-                    AppState.LocationNotObtained -> {
-                        Log.e(TAG, "Location could not be determined.")
-                    }
-                    is AppState.WeatherFetchResult<*> -> {
-                        binding.loading.visibility = View.GONE
-                        handleWeatherData(it.apiResult)
+                        AppState.LocationPermissionDenied -> {
+                            Log.d(TAG, "Show snack bar requesting location permission.")
+                            binding.loading.visibility = View.GONE
+                            showSnackBarToRequestLocationPermission()
+                        }
+                        AppState.LocationNotObtained -> {
+                            Log.e(TAG, "Location could not be determined.")
+                        }
+                        AppState.FetchingWeatherData -> {
+                            Log.d(TAG, "Fetching weather data.")
+                            observeWeatherData()
+                        }
+//                        is AppState.WeatherFetchResult<*> -> {
+//                            binding.loading.visibility = View.GONE
+//                            handleWeatherData(it.apiResult)
+//                        }
                     }
                 }
+            }
+        }
+    }
+
+    private fun observeWeatherData() {
+        viewModel.currentData.observe(this) { currentData ->
+            binding.loading.visibility = View.GONE
+            binding.currentWeather = currentData.data
+            binding.showData = true
+        }
+
+        viewModel.hourlyData.observe(this) { hourlyData ->
+            binding.loading.visibility = View.GONE
+            Log.d(TAG, "Weather forecast data fetched:")
+            hourlyDataAdapter.submitList(hourlyData.data)
+        }
+
+        viewModel.showError.observe(this) { showError ->
+            if (showError.showError) {
+                Log.e(TAG, "Error while getting weather data: ${showError.errorMessage}")
+                Toast.makeText(this, showError.errorMessage, Toast.LENGTH_LONG).show()
             }
         }
     }
@@ -93,12 +123,11 @@ class MainActivity : AppCompatActivity() {
     /**
      * Handle result of weather api.
      */
-    private fun <T> handleWeatherData(result: ApiResult<T>) {
+ /*   private fun <T> handleWeatherData(result: ApiResult<T>) {
         when (result) {
             is ApiResult.Error -> {
                 Log.e(TAG, "Error while getting weather data: ${result.message}")
                 Toast.makeText(this, result.message, Toast.LENGTH_LONG).show()
-                result.message
             }
             is ApiResult.Loading -> {
                 Log.d(TAG, "Loading weather data")
@@ -112,11 +141,12 @@ class MainActivity : AppCompatActivity() {
                     }
                     is OneCall -> {
                         Log.d(TAG, "Weather forecast data fetched: ${result.data.timezone}")
+                        hourlyDataAdapter.submitList(result.data.hourly)
                     }
                 }
             }
         }
-    }
+    }*/
 
     private fun showSnackBarToRequestLocationPermission() {
         Snackbar.make(
