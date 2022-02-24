@@ -7,7 +7,6 @@ import android.os.Bundle
 import android.provider.Settings
 import android.util.Log
 import android.view.View
-import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Lifecycle
@@ -17,11 +16,9 @@ import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
-import test.sample.myweather.data.current.CurrentWeather
-import test.sample.myweather.data.onecall.OneCall
+import test.sample.myweather.base.BaseLocationPermissionUtil
+import test.sample.myweather.base.BaseLocationUtil
 import test.sample.myweather.databinding.MainActivityBinding
-import test.sample.myweather.location.LocationUtil
-import test.sample.myweather.network.ApiResult
 import test.sample.myweather.ui.hourly.HourlyDataAdapter
 import test.sample.myweather.ui.main.AppEvents
 import test.sample.myweather.ui.main.AppState
@@ -34,25 +31,26 @@ const val LOCATION_PERMISSIONS_REQUEST_CODE = 15
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
 
-    private val viewModel by viewModels<MainViewModel>()
+    val viewModel by viewModels<MainViewModel>()
 
     @Inject
-    lateinit var locationUtil: LocationUtil
+    lateinit var locationUtil: BaseLocationUtil
+
+    @Inject
+    lateinit var locationPermissionUtil: BaseLocationPermissionUtil
+
+    @Inject
+    lateinit var hourlyDataAdapter: HourlyDataAdapter
 
     private lateinit var binding: MainActivityBinding
-    private lateinit var hourlyDataAdapter: HourlyDataAdapter
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = MainActivityBinding.inflate(layoutInflater)
         binding.lifecycleOwner = this
         setContentView(binding.root)
-        binding.refresh.setOnClickListener {
-            viewModel.setEvent(AppEvents.RefreshWeatherInfo)
-        }
-        hourlyDataAdapter = HourlyDataAdapter()
         binding.hourlyRecyclerView.adapter = hourlyDataAdapter
+        binding.viewModel = viewModel
         observeAppState()
     }
 
@@ -64,11 +62,19 @@ class MainActivity : AppCompatActivity() {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.uiState.collect {
                     when (it) {
-                        AppState.CheckingLocationPermission -> {
-                            Log.d(TAG, "Checking location Permission.")
-                            binding.loading.visibility = View.VISIBLE
-                            locationUtil.getCurrentLocation { locationResultEvent ->
-                                viewModel.setEvent(locationResultEvent)
+                        AppState.CheckGPSAndLocationPermission -> {
+                            Log.d(TAG, "Checking GPS and location Permission.")
+                            // Check for GPS.
+                            if (!locationPermissionUtil.isLocationEnabled()) {
+                                locationPermissionUtil.showGPSNotEnabledDialog()
+                            } else {
+                                binding.loading.visibility = View.VISIBLE
+                                // Check for location permission.
+                                if (!locationPermissionUtil.checkLocationPermission()) {
+                                    locationPermissionUtil.requestLocationPermission()
+                                } else {
+                                    viewModel.setEvent(AppEvents.PermissionGranted)
+                                }
                             }
                         }
                         AppState.LocationPermissionGranted -> {
@@ -78,96 +84,49 @@ class MainActivity : AppCompatActivity() {
                             }
                         }
                         AppState.LocationPermissionDenied -> {
-                            Log.d(TAG, "Show snack bar requesting location permission.")
                             binding.loading.visibility = View.GONE
-                            showSnackBarToRequestLocationPermission()
+                            if (locationPermissionUtil.showRationale()) {
+                                Log.d(TAG, "Request location permission again.")
+                                viewModel.setEvent(AppEvents.RefreshWeatherInfo)
+                            } else {
+                                Log.d(TAG, "Show snack bar requesting location permission.")
+                                showSnackBarToRequestLocationPermission()
+                            }
                         }
                         AppState.LocationNotObtained -> {
                             Log.e(TAG, "Location could not be determined.")
                         }
-                        AppState.FetchingWeatherData -> {
-                            Log.d(TAG, "Fetching weather data.")
-                            observeWeatherData()
+                        is AppState.WeatherFetchResult<*> -> {
+                            binding.loading.visibility = View.GONE
                         }
-//                        is AppState.WeatherFetchResult<*> -> {
-//                            binding.loading.visibility = View.GONE
-//                            handleWeatherData(it.apiResult)
-//                        }
                     }
                 }
             }
         }
     }
-
-    private fun observeWeatherData() {
-        viewModel.currentData.observe(this) { currentData ->
-            binding.loading.visibility = View.GONE
-            binding.currentWeather = currentData.data
-            binding.showData = true
-        }
-
-        viewModel.hourlyData.observe(this) { hourlyData ->
-            binding.loading.visibility = View.GONE
-            Log.d(TAG, "Weather forecast data fetched:")
-            hourlyDataAdapter.submitList(hourlyData.data)
-        }
-
-        viewModel.showError.observe(this) { showError ->
-            if (showError.showError) {
-                Log.e(TAG, "Error while getting weather data: ${showError.errorMessage}")
-                Toast.makeText(this, showError.errorMessage, Toast.LENGTH_LONG).show()
-            }
-        }
-    }
-
-    /**
-     * Handle result of weather api.
-     */
- /*   private fun <T> handleWeatherData(result: ApiResult<T>) {
-        when (result) {
-            is ApiResult.Error -> {
-                Log.e(TAG, "Error while getting weather data: ${result.message}")
-                Toast.makeText(this, result.message, Toast.LENGTH_LONG).show()
-            }
-            is ApiResult.Loading -> {
-                Log.d(TAG, "Loading weather data")
-            }
-            is ApiResult.Success -> {
-                when (result.data) {
-                    is CurrentWeather -> {
-                        Log.d(TAG, "Weather data fetched: ${result.data.weather[0].getDescription()}")
-                        binding.currentWeather = result.data
-                        binding.showData = true
-                    }
-                    is OneCall -> {
-                        Log.d(TAG, "Weather forecast data fetched: ${result.data.timezone}")
-                        hourlyDataAdapter.submitList(result.data.hourly)
-                    }
-                }
-            }
-        }
-    }*/
 
     private fun showSnackBarToRequestLocationPermission() {
-        Snackbar.make(
+        val sb = Snackbar.make(
             findViewById(R.id.main),
             R.string.permission_rationale,
             Snackbar.LENGTH_INDEFINITE
         )
-            .setAction(R.string.settings) {
-                // Build intent that displays the App settings screen.
-                val intent = Intent()
-                intent.action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
-                val uri = Uri.fromParts(
-                    "package",
-                    BuildConfig.APPLICATION_ID,
-                    null
-                )
-                intent.data = uri
-                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                startActivity(intent)
-            }
-            .show()
+
+        sb.setAction(R.string.settings) {
+            // Build intent that displays the App settings screen.
+            val intent = Intent()
+            intent.action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
+            val uri = Uri.fromParts(
+                "package",
+                BuildConfig.APPLICATION_ID,
+                null
+            )
+            intent.data = uri
+            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            startActivity(intent)
+        }
+
+        sb.show()
     }
 
     override fun onRequestPermissionsResult(
@@ -196,4 +155,12 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
+
+    override fun onStop() {
+        super.onStop()
+        if (viewModel.uiState.value == AppState.LocationPermissionDenied) {
+            viewModel.setEvent(AppEvents.RefreshWeatherInfo)
+        }
+    }
+
 }

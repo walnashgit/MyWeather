@@ -5,8 +5,8 @@
 
     <data>
         <variable
-            name="currentWeather"
-            type="test.sample.myweather.data.current.CurrentWeather" />
+            name="viewModel"
+            type="test.sample.myweather.ui.main.MainViewModel" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -21,11 +21,10 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
             android:layout_marginTop="16dp"
-            android:text="@{currentWeather.name}"
+            android:text="@{viewModel.locationName}"
             android:textSize="16sp"
             app:layout_constraintBottom_toTopOf="@id/temperature"
             app:layout_constraintEnd_toStartOf="@+id/date"
-            app:layout_constraintHorizontal_bias="0.5"
             app:layout_constraintHorizontal_chainStyle="spread_inside"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
@@ -36,11 +35,11 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginEnd="16dp"
-            android:text="@{currentWeather.currentDateTime}"
+            android:layout_marginStart="16dp"
+            android:text="@{viewModel.weatherData.currentData.currentDateTime}"
             android:textSize="16sp"
             app:layout_constraintBottom_toBottomOf="@id/location"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.5"
             app:layout_constraintStart_toEndOf="@+id/location"
             tools:text="23 Oct, 3:35PM" />
 
@@ -50,7 +49,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
             android:layout_marginTop="16dp"
-            android:text="@{Double.toString(currentWeather.main.temp)}"
+            android:text="@{Double.toString(viewModel.weatherData.currentData.temp)}"
             android:textSize="52sp"
             app:layout_constraintEnd_toStartOf="@+id/temperature_unit"
             app:layout_constraintHorizontal_bias="0.5"
@@ -64,7 +63,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="2dp"
-            android:layout_marginTop="16dp"
+            android:paddingTop="10dp"
             android:text="@string/degree_celsius"
             android:textSize="24sp"
             app:layout_constraintEnd_toEndOf="parent"
@@ -90,7 +89,7 @@
             android:layout_height="wrap_content"
             android:paddingStart="2dp"
             android:paddingEnd="2dp"
-            app:setTextWithUnit="@{Double.toString(currentWeather.main.feelsLike)}"
+            app:setTextWithUnit="@{Double.toString(viewModel.weatherData.currentData.feelsLike)}"
             app:unit="@{@string/degree}"
             android:textSize="16sp"
             app:layout_constraintBottom_toBottomOf="@id/feels_like_label"
@@ -105,7 +104,7 @@
             android:layout_height="wrap_content"
             android:paddingStart="16dp"
             android:paddingEnd="16dp"
-            android:text="@{currentWeather.weather[0].description}"
+            android:text="@{viewModel.weatherData.currentData.weather[0].description}"
             android:textSize="24sp"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"
@@ -113,54 +112,53 @@
             tools:text="Overcast clouds" />
 
         <TextView
-            android:id="@+id/max_temp_label"
+            android:id="@+id/dew_point_label"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="32dp"
             android:layout_marginTop="32dp"
-            android:text="@string/max_temp"
+            android:text="@string/dew_point"
             android:textSize="16sp"
-            app:layout_constraintEnd_toStartOf="@+id/max_temp"
+            app:layout_constraintEnd_toStartOf="@+id/dew_point"
             app:layout_constraintHorizontal_bias="0.5"
             app:layout_constraintHorizontal_chainStyle="packed"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/status" />
 
         <TextView
-            android:id="@+id/max_temp"
+            android:id="@+id/dew_point"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginEnd="32dp"
             android:layout_marginStart="32dp"
-            app:setTextWithUnit="@{Double.toString(currentWeather.main.tempMax)}"
+            app:setTextWithUnit="@{Double.toString(viewModel.weatherData.currentData.dewPoint)}"
             app:unit="@{@string/degree}"
             android:textSize="16sp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.5"
-            app:layout_constraintStart_toEndOf="@+id/max_temp_label"
-            app:layout_constraintTop_toTopOf="@id/max_temp_label"
+            app:layout_constraintStart_toEndOf="@+id/dew_point_label"
+            app:layout_constraintTop_toTopOf="@id/dew_point_label"
             tools:text="22" />
 
         <TextView
-            android:id="@+id/min_temp_label"
+            android:id="@+id/uv_index_label"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/min_temp"
+            android:text="@string/uv_index"
             android:textSize="16sp"
             app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintStart_toStartOf="@id/max_temp_label"
-            app:layout_constraintTop_toBottomOf="@id/max_temp_label" />
+            app:layout_constraintStart_toStartOf="@id/dew_point_label"
+            app:layout_constraintTop_toBottomOf="@id/dew_point_label" />
 
         <TextView
-            android:id="@+id/min_temp"
+            android:id="@+id/uv_index"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            app:setTextWithUnit="@{Double.toString(currentWeather.main.tempMin)}"
-            app:unit="@{@string/degree}"
+            android:text="@{Double.toString(viewModel.weatherData.currentData.uvi)}"
             android:textSize="16sp"
-            app:layout_constraintLeft_toRightOf="@id/min_temp_label"
-            app:layout_constraintStart_toStartOf="@id/max_temp"
-            app:layout_constraintTop_toTopOf="@id/min_temp_label"
+            app:layout_constraintLeft_toRightOf="@id/uv_index_label"
+            app:layout_constraintStart_toStartOf="@id/dew_point"
+            app:layout_constraintTop_toTopOf="@id/uv_index_label"
             tools:text="21" />
 
         <TextView
@@ -170,18 +168,18 @@
             android:text="@string/humidity"
             android:textSize="16sp"
             app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintStart_toStartOf="@id/max_temp_label"
-            app:layout_constraintTop_toBottomOf="@id/min_temp_label" />
+            app:layout_constraintStart_toStartOf="@id/dew_point_label"
+            app:layout_constraintTop_toBottomOf="@id/uv_index" />
 
         <TextView
             android:id="@+id/humidity"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            app:setTextWithUnit="@{Integer.toString(currentWeather.main.humidity)}"
+            app:setTextWithUnit="@{Integer.toString(viewModel.weatherData.currentData.humidity)}"
             app:unit="@{@string/percentage}"
             android:textSize="16sp"
             app:layout_constraintLeft_toRightOf="@id/humidity_label"
-            app:layout_constraintStart_toStartOf="@id/max_temp"
+            app:layout_constraintStart_toStartOf="@id/dew_point"
             app:layout_constraintTop_toTopOf="@id/humidity_label"
             tools:text="92" />
 
@@ -192,18 +190,18 @@
             android:text="@string/visibility"
             android:textSize="16sp"
             app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintStart_toStartOf="@id/max_temp_label"
+            app:layout_constraintStart_toStartOf="@id/dew_point_label"
             app:layout_constraintTop_toBottomOf="@id/humidity_label" />
 
         <TextView
             android:id="@+id/visibility"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            app:setTextWithUnit="@{Integer.toString(currentWeather.visibility/1000)}"
+            app:setTextWithUnit="@{Integer.toString(viewModel.weatherData.currentData.visibility/1000)}"
             app:unit="@{@string/kilometer}"
             android:textSize="16sp"
             app:layout_constraintLeft_toRightOf="@id/visibility_label"
-            app:layout_constraintStart_toStartOf="@id/max_temp"
+            app:layout_constraintStart_toStartOf="@id/dew_point"
             app:layout_constraintTop_toTopOf="@id/visibility_label"
             tools:text="1234" />
 
@@ -214,17 +212,17 @@
             android:text="@string/sun_rise"
             android:textSize="16sp"
             app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintStart_toStartOf="@id/max_temp_label"
+            app:layout_constraintStart_toStartOf="@id/dew_point_label"
             app:layout_constraintTop_toBottomOf="@id/visibility_label" />
 
         <TextView
             android:id="@+id/sunrise"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@{currentWeather.sunriseTime}"
+            android:text="@{viewModel.weatherData.currentData.sunriseTime}"
             android:textSize="16sp"
             app:layout_constraintLeft_toRightOf="@id/sunrise_label"
-            app:layout_constraintStart_toStartOf="@id/max_temp"
+            app:layout_constraintStart_toStartOf="@id/dew_point"
             app:layout_constraintTop_toTopOf="@id/sunrise_label"
             tools:text="05:01 AM" />
 
@@ -235,17 +233,17 @@
             android:text="@string/sun_set"
             android:textSize="16sp"
             app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintStart_toStartOf="@id/max_temp_label"
+            app:layout_constraintStart_toStartOf="@id/dew_point_label"
             app:layout_constraintTop_toBottomOf="@id/sunrise_label" />
 
         <TextView
             android:id="@+id/sunset"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@{currentWeather.sunsetTime}"
+            android:text="@{viewModel.weatherData.currentData.sunsetTime}"
             android:textSize="16sp"
             app:layout_constraintLeft_toRightOf="@id/sunset_label"
-            app:layout_constraintStart_toStartOf="@id/max_temp"
+            app:layout_constraintStart_toStartOf="@id/dew_point"
             app:layout_constraintTop_toTopOf="@id/sunset_label"
             tools:text="06:51 PM" />
 

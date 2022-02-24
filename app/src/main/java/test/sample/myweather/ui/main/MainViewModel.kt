@@ -1,71 +1,80 @@
 package test.sample.myweather.ui.main
 
-import android.location.Location
 import android.util.Log
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import test.sample.myweather.data.current.CurrentWeather
+import test.sample.myweather.DispatcherProvider
 import test.sample.myweather.data.onecall.OneCall
 import test.sample.myweather.network.ApiResult
-import test.sample.myweather.network.WeatherRepository
+import test.sample.myweather.network.WeatherRepositoryOneCallBase
+import test.sample.myweather.base.BaseViewModel
 import test.sample.myweather.ui.main.AppEvents.LocationFetched
 import javax.inject.Inject
 
 private const val TAG = "MainViewModel"
+
+/**
+ * ViewModel class for handling app's state and events.
+ */
 @HiltViewModel
-class MainViewModel @Inject constructor (private val repository: WeatherRepository) : ViewModel() {
+class MainViewModel @Inject constructor(
+    private val repository: @JvmSuppressWildcards WeatherRepositoryOneCallBase,
+    private val dispatcher: DispatcherProvider
+) :
+    BaseViewModel<AppState, AppEvents>(dispatcher) {
 
-    private val _uiState: MutableStateFlow<AppState> = MutableStateFlow(AppState.CheckingLocationPermission)
-    val uiState = _uiState.asStateFlow()
+    private val _weatherData: MutableStateFlow<OneCall?> = MutableStateFlow(null)
+    val weatherData = _weatherData.asStateFlow()
 
-    private val _event : MutableSharedFlow<AppEvents> = MutableSharedFlow()
-    private val event = _event.asSharedFlow()
+    private val _errorMessage: MutableStateFlow<String> = MutableStateFlow("")
+    val errorMessage = _errorMessage.asStateFlow()
 
-    private val _currentData: MutableLiveData<CurrentData> = MutableLiveData()
-    val currentData: LiveData<CurrentData> = _currentData
+    private val _locationName: MutableStateFlow<String> = MutableStateFlow("")
+    val locationName = _locationName.asStateFlow()
 
-    private val _hourlyData: MutableLiveData<HourlyData> = MutableLiveData()
-    val hourlyData: LiveData<HourlyData> = _hourlyData
 
-    private val _showError: MutableLiveData<ShowError> = MutableLiveData()
-    val showError: LiveData<ShowError> = _showError
-
-    init {
-        subscribeEvent()
+    override fun createInitialState(): AppState {
+        return AppState.CheckGPSAndLocationPermission
     }
 
-    private fun getCurrentLocationWeather(location: Location?) {
-        setUiState(AppState.FetchingWeatherData)
-        location?.let {
-            getWeatherData(it.latitude.toString(), it.longitude.toString())
-        } ?: run {
-            setUiState(AppState.LocationNotObtained)
+    override fun handleEvent(events: AppEvents) {
+        when (events) {
+            AppEvents.PermissionGranted -> {
+                setAppState(AppState.LocationPermissionGranted)
+            }
+            AppEvents.PermissionDenied -> {
+                setAppState(AppState.LocationPermissionDenied)
+            }
+            AppEvents.LocationFetchFailed -> {
+                setAppState(AppState.LocationNotObtained)
+                _errorMessage.value = "Location could not be determined."
+            }
+            is LocationFetched -> {
+                getCurrentLocationWeather(events.location)
+                _locationName.value = events.location.name
+            }
+            AppEvents.RefreshWeatherInfo -> {
+                _weatherData.value = null
+                _errorMessage.value = ""
+                setAppState(createInitialState())
+            }
         }
     }
 
-    /**
-     * Fetches the current weather data for the location passed
-     */
-    private fun getWeatherData(lat: String, long: String){
-        viewModelScope.launch {
-            val weatherData = repository.getCurrentWeatherData(lat, long)
-//            setUiState(AppState.WeatherFetchResult(weatherData))
+    private fun getCurrentLocationWeather(location: LocationModel) {
+        getWeatherForecast(
+            location.location.latitude.toString(),
+            location.location.longitude.toString()
+        )
+    }
+
+    private fun getWeatherForecast(lat: String, long: String) {
+        viewModelScope.launch(dispatcher.main) {
+            val weatherData = repository.getWeatherData(lat, long)
             handleWeatherData(weatherData)
-            getWeatherForecast(lat, long)
         }
-    }
-
-    /**
-     * Fetches the current and forecast weather data for the location passed.
-     */
-    private suspend fun getWeatherForecast(lat: String, long: String) {
-        val weatherData = repository.getWeatherForecast(lat, long)
-        handleWeatherData(weatherData)
     }
 
     /**
@@ -75,66 +84,24 @@ class MainViewModel @Inject constructor (private val repository: WeatherReposito
         when (result) {
             is ApiResult.Error -> {
                 Log.e(TAG, "Error while getting weather data: ${result.message}")
-                _showError.value = ShowError(result.message, true)
-            }
-            is ApiResult.Loading -> {
-                Log.d(TAG, "Loading weather data")
-
+                _errorMessage.value = result.message
             }
             is ApiResult.Success -> {
                 when (result.data) {
-                    is CurrentWeather -> {
-                        Log.d(TAG, "Weather data fetched: ${result.data.weather[0].getDescription()}")
-                        _currentData.value = CurrentData(result.data)
-                    }
                     is OneCall -> {
-                        Log.d(TAG, "Weather forecast data fetched: ${result.data.timezone}")
-                        _hourlyData.value = HourlyData(result.data.getHourlyData())
+                        Log.d(TAG, "Weather forecast data fetched.")
+                        _weatherData.value = result.data
                     }
                 }
             }
         }
-    }
-
-//    private fun createHourDataSnapShot(oneCall: OneCall) {
-//        val hourlySnapShot = oneCall.hourly
-//        setUiState(AppState.WeatherFetchResult(ApiResult.Success(oneCall.hourly)))
-//    }
-
-    private fun setUiState(newState: AppState) {
-        _uiState.value = newState
-    }
-
-    fun setEvent(newEvent: AppEvents) {
-        viewModelScope.launch {
-            _event.emit(newEvent)
-        }
+        setAppState(AppState.WeatherFetchResult(result))
     }
 
     /**
-     * Listen to app events.
+     * Handle the refresh click event from UI.
      */
-    private fun subscribeEvent() {
-        viewModelScope.launch {
-            event.collect {
-                when (it) {
-                    AppEvents.PermissionGranted -> {
-                        setUiState(AppState.LocationPermissionGranted)
-                    }
-                    AppEvents.PermissionDenied -> {
-                        setUiState(AppState.LocationPermissionDenied)
-                    }
-                    AppEvents.LocationFetchFailed -> {
-                        setUiState(AppState.LocationNotObtained)
-                    }
-                    is LocationFetched -> {
-                        getCurrentLocationWeather(it.location)
-                    }
-                    AppEvents.RefreshWeatherInfo -> {
-                        setUiState(AppState.CheckingLocationPermission)
-                    }
-                }
-            }
-        }
+    fun onRefreshClicked() {
+        setEvent(AppEvents.RefreshWeatherInfo)
     }
 }

@@ -25,6 +25,12 @@ data class OneCall(
     @SerializedName("timezone_offset")
     val timezoneOffset: Long
 ) {
+
+    fun getCurrentData(): Current {
+        current.timezone = timezoneOffset
+        return current
+    }
+
     fun getHourlyData(): List<Hourly> {
         return hourly.onEach {
             it.time = getTime(it.dt)

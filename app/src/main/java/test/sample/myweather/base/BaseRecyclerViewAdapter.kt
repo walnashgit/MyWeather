@@ -1,4 +1,4 @@
-package test.sample.myweather.ui
+package test.sample.myweather.base
 
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter

@@ -2,6 +2,8 @@ package test.sample.myweather.data.onecall
 
 
 import com.google.gson.annotations.SerializedName
+import java.text.SimpleDateFormat
+import java.util.*
 
 data class Current(
     @SerializedName("clouds")
@@ -33,5 +35,26 @@ data class Current(
     @SerializedName("wind_deg")
     val windDeg: Int,
     @SerializedName("wind_speed")
-    val windSpeed: Double
-)
+    val windSpeed: Double,
+
+    // This value is not serialized
+    var timezone: Long
+) {
+    fun getCurrentDateTime(): String {
+        val dateFormat = SimpleDateFormat("d MMM, h:mm a", Locale.getDefault())
+        val localOffset = Calendar.getInstance().get(Calendar.ZONE_OFFSET)
+        return dateFormat.format((dt + timezone)*1000 - localOffset).uppercase(Locale.getDefault())
+    }
+
+    fun getSunriseTime(): String {
+        val dateFormat = SimpleDateFormat("h:mm a", Locale.getDefault())
+        val localOffset = Calendar.getInstance().get(Calendar.ZONE_OFFSET)
+        return dateFormat.format((sunrise + timezone)*1000 - localOffset).uppercase(Locale.getDefault())
+    }
+
+    fun getSunsetTime(): String {
+        val dateFormat = SimpleDateFormat("h:mm a", Locale.getDefault())
+        val localOffset = Calendar.getInstance().get(Calendar.ZONE_OFFSET)
+        return dateFormat.format((sunset + timezone)*1000 - localOffset).uppercase(Locale.getDefault())
+    }
+}

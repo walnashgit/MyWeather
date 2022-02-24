@@ -13,10 +13,12 @@
     <string name="humidity">Humidity</string>
     <string name="visibility">Visibility</string>
     <string name="degree_celsius">℃</string>
-    <string name="sun_rise">Sun Rise</string>
-    <string name="sun_set">Sun Set</string>
+    <string name="sun_rise">Sunrise</string>
+    <string name="sun_set">Sunset</string>
     <string name="degree">°</string>
     <string name="percentage">%</string>
     <string name="kilometer">KM</string>
+    <string name="dew_point">Dew point</string>
+    <string name="uv_index">UV index</string>
 
 </resources>
